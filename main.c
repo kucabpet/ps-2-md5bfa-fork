@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <sys/types.h>
 
 // Constants are the integer part of the sines of integers (in radians) * 2^32.
 const uint32_t k[64] = { 0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
@@ -171,7 +172,7 @@ int equals_array(uint8_t* array_1, uint8_t* array_2) {
 void guess(char *prefix, int level, uint8_t* input, int max_depth,
 		char *alphabet, int *found) {
 
-	if(found) {
+	if (found) {
 		return;
 	}
 
@@ -218,36 +219,56 @@ void parse_input_data(char *input, uint8_t *output) {
 
 int main(int argc, char **argv) {
 
-	if (argc < 3) {
-		printf("usage: %s <hash>, <count of letter>\n", argv[0]);
-		return 1;
+	int i = 0;
 
+	for (int kid = 0; kid < 4; ++kid) {
+		int pid = fork();
+		if (pid < 0) {
+			exit(EXIT_FAILURE);
+		} else if (pid > 0) {
+			/* Parent process */
+			printf("parent process %d \n", ++i);
+		} else {
+			printf("child process %d \n", ++i);
+			/* Child process */
+			exit(EXIT_SUCCESS);
+		}
 	}
 
-	char *input_data = argv[1];
+	for (int kid = 0; kid < 4; ++kid) {
+		int status;
+		pid_t pid = wait(&status);
 
-	if (strlen(input_data) != 32) {
-		printf("input hash must have 32 character length");
-		return 1;
-	}
-
-	int len;
-	len = atoi(argv[2]);
-
-	printf("Input hash: %s \n", input_data);
-	printf("Count of character: %d \n", len);
-
-	uint8_t input_data_hexa[16];
-	parse_input_data(input_data, input_data_hexa);
-
-	char alphabet[26];
-	generate_alphabet(alphabet);
-
-	int *found = 0;
-
-	guess("", 0, input_data_hexa, len, alphabet, found);
-
-	printf("\n\n Program exit \n");
+//	if (argc < 3) {
+//		printf("usage: %s <hash>, <count of letter>\n", argv[0]);
+//		return 1;
+//
+//	}
+//
+//	char *input_data = argv[1];
+//
+//	if (strlen(input_data) != 32) {
+//		printf("input hash must have 32 character length");
+//		return 1;
+//	}
+//
+//	int len;
+//	len = atoi(argv[2]);
+//
+//	printf("Input hash: %s \n", input_data);
+//	printf("Count of character: %d \n", len);
+//
+//	uint8_t input_data_hexa[16];
+//	parse_input_data(input_data, input_data_hexa);
+//
+//	char alphabet[26];
+//	generate_alphabet(alphabet);
+//
+//	int *found = 0;
+//
+//	guess("", 0, input_data_hexa, len, alphabet, found);
+//
+//	printf("\n\n Program exit \n");
 	return 0;
 }
 
