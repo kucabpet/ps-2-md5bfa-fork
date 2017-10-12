@@ -3,6 +3,9 @@
 #include <string.h>
 #include <stdint.h>
 #include <sys/types.h>
+#include <sys/mman.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 /*
  * Simple MD5 implementation
@@ -219,10 +222,6 @@ void guess(char *prefix, int max_depth, char *alphabet, int *found, int level,
 		char *short_alphabet, int len_short_alphabet, uint8_t* input,
 		char *process_name) {
 
-	if (found) {
-		return;
-	}
-
 	uint8_t current_hash[16];
 	char word[max_depth];
 
@@ -244,7 +243,10 @@ void guess(char *prefix, int max_depth, char *alphabet, int *found, int level,
 			if (equals_array(input, current_hash)) {
 				printf("\nInput string found: %s\n", word);
 				*found = 1;
-//				return;
+			}
+
+			if (*found == 1) {
+				return;
 			}
 
 			if (level < max_depth) {
@@ -269,7 +271,10 @@ void guess(char *prefix, int max_depth, char *alphabet, int *found, int level,
 			if (equals_array(input, current_hash)) {
 				printf("\nInput string found: %s\n", word);
 				*found = 1;
-//				return;
+			}
+
+			if (*found == 1) {
+				return;
 			}
 
 			if (level < max_depth) {
@@ -280,6 +285,8 @@ void guess(char *prefix, int max_depth, char *alphabet, int *found, int level,
 	}
 
 }
+
+static int *found;
 
 // input: "bc"
 // 5360af35bde9ebd8f01f492dc059593c
@@ -338,7 +345,11 @@ int main(int argc, char **argv) {
 //	}
 
 	int i = 0;
-	int *found = 0;
+
+	found = mmap(NULL, sizeof *found, PROT_READ | PROT_WRITE,
+	MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+
+	*found = 0;
 
 //	guess("", 2, alphabet, found, 0,alphabet_1, ALPHABET_6, "");
 //	printf("\n ------------------------------ \n");
@@ -383,18 +394,23 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	for (int kid = 0; kid < 8; ++kid) {
+		int status;
+		pid_t pid = wait(&status);
+	}
+
 	for (int i = 0; i < 9; i++) {
 		short_alphabets[i] = NULL;
 		free(short_alphabets[i]);
 	}
+
 	*short_alphabets = NULL;
 	free(*short_alphabets);
 
-	for (int kid = 0; kid < 8; ++kid) {
-		int status;
-		pid_t pid = wait(&status);
+	munmap(found, sizeof *found);
 
-		return 0;
-	}
+	printf("program end \n");
+
+	return 0;
 }
 
