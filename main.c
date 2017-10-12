@@ -10,7 +10,6 @@
 /*
  * Simple MD5 implementation
  *
- * Compile with: gcc -o md5 md5.c
  */
 
 // Constants are the integer part of the sines of integers (in radians) * 2^32.
@@ -236,17 +235,19 @@ void guess(char *prefix, int max_depth, char *alphabet, int *found, int level,
 
 			hash_md5(word, current_hash);
 
-			printf("%s: Trying %s... ", process_name, word);
-			show_hash(current_hash);
-			printf("\n");
+			if (*found) {
+				return;
+			}
+
+			if (!*found) {
+				printf("%s: Trying %s... ", process_name, word);
+				show_hash(current_hash);
+				printf("\n");
+			}
 
 			if (equals_array(input, current_hash)) {
 				printf("\nInput string found: %s\n", word);
 				*found = 1;
-			}
-
-			if (*found == 1) {
-				return;
 			}
 
 			if (level < max_depth) {
@@ -264,17 +265,19 @@ void guess(char *prefix, int max_depth, char *alphabet, int *found, int level,
 
 			hash_md5(word, current_hash);
 
-			printf("%s: Trying %s... ", process_name, word);
-			show_hash(current_hash);
-			printf("\n");
+			if (*found) {
+				return;
+			}
+
+			if (!*found) {
+				printf("%s: Trying %s... ", process_name, word);
+				show_hash(current_hash);
+				printf("\n");
+			}
 
 			if (equals_array(input, current_hash)) {
 				printf("\nInput string found: %s\n", word);
 				*found = 1;
-			}
-
-			if (*found == 1) {
-				return;
 			}
 
 			if (level < max_depth) {
@@ -288,8 +291,9 @@ void guess(char *prefix, int max_depth, char *alphabet, int *found, int level,
 
 static int *found;
 
-// input: "bc"
-// 5360af35bde9ebd8f01f492dc059593c
+/*
+ * Need compile with: gcc -std=gnu99 -o main main.c
+ */
 int main(int argc, char **argv) {
 
 	if (argc < 3) {
@@ -340,20 +344,12 @@ int main(int argc, char **argv) {
 	char *short_alphabets[8] = { alphabet_1, alphabet_2, alphabet_3, alphabet_4,
 			alphabet_5, alphabet_6, alphabet_7, alphabet_8 };
 
-//	for (int i = 0; i < 8; i++) {
-//		printf(" %s ", short_alphabets[i]);
-//	}
-
 	int i = 0;
 
 	found = mmap(NULL, sizeof *found, PROT_READ | PROT_WRITE,
 	MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 
 	*found = 0;
-
-//	guess("", 2, alphabet, found, 0,alphabet_1, ALPHABET_6, "");
-//	printf("\n ------------------------------ \n");
-//	guess("", 2, alphabet, found, 0,alphabet_2, ALPHABET_6, "");
 
 	for (int kid = 0; kid < 4; ++kid) {
 		pid_t pid = fork();
@@ -368,24 +364,19 @@ int main(int argc, char **argv) {
 			char name[3];
 			sprintf(name, "pp%d", id);
 
-//			for (int i = 0; i < 9; i++) {
-//				printf(" %s ", short_alphabets[i]);
-//			}
-
 			char *current_alphabet = choose_alphabet(short_alphabets, id);
-//			printf("%s: %s size = %d\n", name, current_alphabet, strlen(current_alphabet));
 
 			guess("", 2, alphabet, found, 0, current_alphabet,
 					strlen(current_alphabet), input_data_hexa, name);
 
 		} else {
 			/* Child processes */
+
 			int id = i * 2;
 			char name[3];
 			sprintf(name, "cp%d", id);
 
 			char *current_alphabet = choose_alphabet(short_alphabets, id);
-//			printf("%s: %s size = %d\n", name, current_alphabet, strlen(current_alphabet));
 
 			guess("", 2, alphabet, found, 0, current_alphabet,
 					strlen(current_alphabet), input_data_hexa, name);
@@ -409,7 +400,7 @@ int main(int argc, char **argv) {
 
 	munmap(found, sizeof *found);
 
-	printf("program end \n");
+	printf("\n program finish... \n");
 
 	return 0;
 }
