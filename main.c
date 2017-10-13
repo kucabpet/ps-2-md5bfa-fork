@@ -366,7 +366,7 @@ int main(int argc, char **argv) {
 
 			char *current_alphabet = choose_alphabet(short_alphabets, id);
 
-			guess("", 2, alphabet, found, 0, current_alphabet,
+			guess("", len, alphabet, found, 0, current_alphabet,
 					strlen(current_alphabet), input_data_hexa, name);
 
 		} else {
@@ -378,7 +378,7 @@ int main(int argc, char **argv) {
 
 			char *current_alphabet = choose_alphabet(short_alphabets, id);
 
-			guess("", 2, alphabet, found, 0, current_alphabet,
+			guess("", len, alphabet, found, 0, current_alphabet,
 					strlen(current_alphabet), input_data_hexa, name);
 
 			exit(EXIT_SUCCESS);
