@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include "md5.h"
 
+#define FORK_PROCES 8
+#define HASH_FOUND 999
 
 void hash_md5(char* input, uint8_t* result) {
 	// benchmark
@@ -86,6 +88,8 @@ void guess(char *prefix, int max_depth, char *alphabet, int *found, int level,
 		char *short_alphabet, int len_short_alphabet, uint8_t* input,
 		char *process_name) {
 
+	printf("guess() %d", getpid());
+
 	uint8_t current_hash[16];
 	char word[max_depth];
 
@@ -112,7 +116,7 @@ void guess(char *prefix, int max_depth, char *alphabet, int *found, int level,
 
 			if (equals_array(input, current_hash)) {
 				printf("\nInput string found: %s\n", word);
-				*found = 1;
+				*found = HASH_FOUND;
 			}
 
 			if (level < max_depth) {
@@ -142,7 +146,7 @@ void guess(char *prefix, int max_depth, char *alphabet, int *found, int level,
 
 			if (equals_array(input, current_hash)) {
 				printf("\nInput string found: %s\n", word);
-				*found = 1;
+				*found = HASH_FOUND;
 			}
 
 			if (level < max_depth) {
@@ -154,7 +158,10 @@ void guess(char *prefix, int max_depth, char *alphabet, int *found, int level,
 
 }
 
-static int *found;
+void hell(){
+
+	printf("fewfewfewfewfewfewfwfeewfwefwefwefwefwe");
+}
 
 /*
  * Need compile with: gcc -std=gnu99 -o main main.c
@@ -209,14 +216,10 @@ int main(int argc, char **argv) {
 	char *short_alphabets[8] = { alphabet_1, alphabet_2, alphabet_3, alphabet_4,
 			alphabet_5, alphabet_6, alphabet_7, alphabet_8 };
 
+	int *found = 0;
 	int i = 0;
 
-	found = mmap(NULL, sizeof *found, PROT_READ | PROT_WRITE,
-	MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-
-	*found = 0;
-
-	for (int kid = 0; kid < 4; ++kid) {
+	for (int kid = 0; kid < 8; ++kid) {
 		pid_t pid = fork();
 		++i;
 
@@ -225,23 +228,14 @@ int main(int argc, char **argv) {
 		} else if (pid > 0) {
 			/* Parent processes */
 
-			int id = i * 2 - 1;
-			char name[3];
-			sprintf(name, "pp%d", id);
-
-			char *current_alphabet = choose_alphabet(short_alphabets, id);
-
-			guess("", len, alphabet, found, 0, current_alphabet,
-					strlen(current_alphabet), input_data_hexa, name);
-
 		} else {
+
 			/* Child processes */
 
-			int id = i * 2;
 			char name[3];
-			sprintf(name, "cp%d", id);
+			sprintf(name, "p%d", i);
 
-			char *current_alphabet = choose_alphabet(short_alphabets, id);
+			char *current_alphabet = choose_alphabet(short_alphabets, i);
 
 			guess("", len, alphabet, found, 0, current_alphabet,
 					strlen(current_alphabet), input_data_hexa, name);
@@ -251,8 +245,15 @@ int main(int argc, char **argv) {
 	}
 
 	for (int kid = 0; kid < 8; ++kid) {
+
 		int status;
 		pid_t pid = wait(&status);
+		status = WEXITSTATUS(status);
+		printf(" end PID: %d with return code %d\n", pid, status);
+
+		if (status == HASH_FOUND) {
+			kill(0, SIGTERM);
+		}
 	}
 
 	for (int i = 0; i < 9; i++) {
@@ -263,10 +264,7 @@ int main(int argc, char **argv) {
 	*short_alphabets = NULL;
 	free(*short_alphabets);
 
-	munmap(found, sizeof *found);
-
 	printf("\n program finish... \n");
 
 	return 0;
 }
-
