@@ -295,7 +295,7 @@ void guess(char *prefix, int max_depth, char *alphabet, int *found, int level,
 }
 
 /*
- * Need compile with: gcc -std=gnu99 -Wall main.c md5.c -o main
+ * Need compile with: gcc -std=gnu99 -Wall main.c -o main
  */
 int main(int argc, char **argv) {
 
