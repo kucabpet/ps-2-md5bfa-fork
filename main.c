@@ -2,10 +2,11 @@
 #include <sys/mman.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <signal.h>
 #include "md5.h"
 
 #define FORK_PROCES 8
-#define HASH_FOUND 999
+#define HASH_FOUND 1234
 
 void hash_md5(char* input, uint8_t* result) {
 	// benchmark
@@ -88,8 +89,6 @@ void guess(char *prefix, int max_depth, char *alphabet, int *found, int level,
 		char *short_alphabet, int len_short_alphabet, uint8_t* input,
 		char *process_name) {
 
-	printf("guess() %d", getpid());
-
 	uint8_t current_hash[16];
 	char word[max_depth];
 
@@ -158,11 +157,6 @@ void guess(char *prefix, int max_depth, char *alphabet, int *found, int level,
 
 }
 
-void hell(){
-
-	printf("fewfewfewfewfewfewfwfeewfwefwefwefwefwe");
-}
-
 /*
  * Need compile with: gcc -std=gnu99 -o main main.c
  */
@@ -216,10 +210,11 @@ int main(int argc, char **argv) {
 	char *short_alphabets[8] = { alphabet_1, alphabet_2, alphabet_3, alphabet_4,
 			alphabet_5, alphabet_6, alphabet_7, alphabet_8 };
 
-	int *found = 0;
+	int found_value = 0;
+	int *found = &found_value;
 	int i = 0;
 
-	for (int kid = 0; kid < 8; ++kid) {
+	for (int kid = 0; kid < FORK_PROCES; ++kid) {
 		pid_t pid = fork();
 		++i;
 
@@ -227,9 +222,7 @@ int main(int argc, char **argv) {
 			exit(EXIT_FAILURE);
 		} else if (pid > 0) {
 			/* Parent processes */
-
 		} else {
-
 			/* Child processes */
 
 			char name[3];
@@ -240,31 +233,23 @@ int main(int argc, char **argv) {
 			guess("", len, alphabet, found, 0, current_alphabet,
 					strlen(current_alphabet), input_data_hexa, name);
 
-			exit(EXIT_SUCCESS);
+			if (found_value == HASH_FOUND) {
+				exit(HASH_FOUND);
+			} else {
+				exit(EXIT_SUCCESS);
+			}
 		}
 	}
 
-	for (int kid = 0; kid < 8; ++kid) {
+	for (int kid = 0; kid < FORK_PROCES; ++kid) {
 
 		int status;
 		pid_t pid = wait(&status);
-		status = WEXITSTATUS(status);
-		printf(" end PID: %d with return code %d\n", pid, status);
 
-		if (status == HASH_FOUND) {
-			kill(0, SIGTERM);
+		if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+			kill(0, SIGKILL);
 		}
 	}
-
-	for (int i = 0; i < 9; i++) {
-		short_alphabets[i] = NULL;
-		free(short_alphabets[i]);
-	}
-
-	*short_alphabets = NULL;
-	free(*short_alphabets);
-
-	printf("\n program finish... \n");
 
 	return 0;
 }
