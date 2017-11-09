@@ -146,10 +146,7 @@ void md5(const uint8_t *initial_msg, size_t initial_len, uint8_t *digest) {
 }
 
 void hash_md5(char* input, uint8_t* result) {
-	// benchmark
-	for (int i = 0; i < 1000000; i++) {
-		md5((uint8_t*) input, (size_t) strlen(input), result);
-	}
+	md5((uint8_t*) input, (size_t) strlen(input), result);
 }
 
 void parse_input_data(char *input, uint8_t *output) {
